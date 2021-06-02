@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
+import MovieDetails from './movie-details-fn';
 import PropTypes from "prop-types";
 import axios from "axios";
 import { Card, CardHeader, CardContent, CardActions } from "@material-ui/core";
@@ -6,19 +7,31 @@ import Grid from "@material-ui/core/Grid";
 import Button from "@material-ui/core/Button";
 import Collapse from '@material-ui/core/Collapse'
 import { ThemeContext, LanguageContext } from "./App";
+import { makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles({
+  root: props => ({
+    backgroundColor: props.background,
+    color: props.foreground,
+    padding: '1rem',
+    margin: '1rem',
+  }),
+  cardContent: {
+    padding: '0',
+    margin: '0',
+  },
+});
 
 function MoviesList({ additionalMovies }) {
+  const language = useContext(LanguageContext);
+  const innerTheme = useContext(ThemeContext);
+  const classes = useStyles(innerTheme);
   const [state, setState] = useState({
     movies: [],
     displayTitle: '',
     loading: false,
     expanded: [],
   });
-  const language = useContext(LanguageContext);
-  const theme = useContext(ThemeContext);
-  const textStyle = {
-    color: theme.foreground
-  };
 
   useEffect(() => {
     // serviceX.subscribe(user);
@@ -28,10 +41,11 @@ function MoviesList({ additionalMovies }) {
     }));
     axios.get("https://swapi.dev/api/films/")
       .then(({ data: { results } }) => {
-        // TODO log off!
+        // TODO log off
+        console.log(results[0]);
         setState((prevState) => ({
           ...prevState, 
-          expanded: [false, false, false, false, false, false],
+          expanded: new Array(results.length).fill(false),
           movies: results,
           loading: true,
         }));
@@ -47,7 +61,8 @@ function MoviesList({ additionalMovies }) {
     if (newMovie !== null) {
       setState((prevState) => ({
         ...prevState, 
-        movies: [...state.movies, newMovie],
+        expanded: [...prevState.expanded, false],
+        movies: [...prevState.movies, newMovie],
       }));
     }
   }, [additionalMovies]);
@@ -74,16 +89,18 @@ function MoviesList({ additionalMovies }) {
 
   return (
     <>
-      <h4>{state.displayTitle}</h4>
+      <h1>{state.displayTitle}</h1>
       <Grid container spacing={3}>
         {state.movies.map((movie, idx) => {
           return (
-            <Grid item xs={4} key={movie.episode_id}>
-              <Card style={{ backgroundColor: theme.background }}>
-                <CardHeader style={textStyle} title={movie.title} />
-                <CardContent>
-                  <h4 style={textStyle}>{movie.director}</h4>
-                </CardContent>
+            <Grid item xs={12} key={movie.episode_id}>
+              <Card className={ classes.root }>
+                <div className={ classes.cardContent }>
+                  <CardHeader title={movie.title} />
+                  <CardContent>
+                    <h3>{movie.director}</h3>
+                  </CardContent>
+                </div>
                 <CardActions>
                   <Button 
                     variant="outlined"
@@ -97,7 +114,9 @@ function MoviesList({ additionalMovies }) {
                 </CardActions>
                 <Collapse in={state.expanded[idx]} timeout="auto" unmountOnExit>
                   <CardContent>
-                    Some movie details
+                    <MovieDetails 
+                      movie={movie}
+                    />
                   </CardContent>
                 </Collapse>
               </Card>

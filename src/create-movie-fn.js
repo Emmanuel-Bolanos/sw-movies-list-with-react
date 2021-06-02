@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
 import PropTypes from "prop-types";
+import { nanoid } from 'nanoid';
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 
@@ -13,25 +14,36 @@ function CreateMovie(props) {
   function handleDirectorChange(event) {
     setDirector(event.target.value);
   }
-  const handleNewMovie = useCallback(() => {
-    createMovieFn({ title, director });
+  const handleNewMovie = useCallback((e) => {
+    e.preventDefault();
+    const episode_id = nanoid(6);
+    createMovieFn({ title, director, episode_id });
   }, [createMovieFn, title, director]);
   return (
-    <form style={{ marginTop: 16 }}>
+    <form 
+      style={{ marginTop: 16 }} 
+      onSubmit={handleNewMovie}
+    >
       <TextField
+        required
         id="title"
         label="Title"
         value={title}
         onChange={handleTitleChange}
       />
       <TextField
+        required
         id="director"
         label="Director"
         value={director}
         onChange={handleDirectorChange}
       />
       <div style={{ marginTop: 16 }}>
-        <Button color="primary" variant="contained" onClick={handleNewMovie}>
+        <Button 
+          type="submit"
+          color="primary" 
+          variant="contained" 
+        >
           Create star wars movie
         </Button>
       </div>

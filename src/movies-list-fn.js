@@ -1,30 +1,43 @@
 import React, { useState, useEffect, useContext } from "react";
 import PropTypes from "prop-types";
-import Card from "@material-ui/core/Card";
-import CardHeader from "@material-ui/core/CardHeader";
-import CardContent from "@material-ui/core/CardContent";
-import Grid from "@material-ui/core/Grid";
 import axios from "axios";
+import { Card, CardHeader, CardContent, CardActions } from "@material-ui/core";
+import Grid from "@material-ui/core/Grid";
+import Button from "@material-ui/core/Button";
+import Collapse from '@material-ui/core/Collapse'
 import { ThemeContext, LanguageContext } from "./App";
 
 function MoviesList({ additionalMovies }) {
   const [state, setState] = useState({
     movies: [],
-    loading: false
+    displayTitle: '',
+    loading: false,
+    expanded: [],
   });
-  const [displayTitle, setDisplayTitle] = useState("");
-  const theme = useContext(ThemeContext);
   const language = useContext(LanguageContext);
-  console.log("language ", language);
+  const theme = useContext(ThemeContext);
+  const textStyle = {
+    color: theme.foreground
+  };
+
   useEffect(() => {
-    /// serviceX.subscribe(user);
-    setState({ ...state, loading: true });
-    axios.get("https://swapi.dev/api/films/").then(({ data: { results } }) => {
-      console.log("movies data", results);
-      setState({ movies: results, loading: false });
-    });
+    // serviceX.subscribe(user);
+    setState((prevState) => ({
+      ...prevState, 
+      loading: true,
+    }));
+    axios.get("https://swapi.dev/api/films/")
+      .then(({ data: { results } }) => {
+        // TODO log off!
+        setState((prevState) => ({
+          ...prevState, 
+          expanded: [false, false, false, false, false, false],
+          movies: results,
+          loading: true,
+        }));
+      });
     return () => {
-      /// serviceX.unsubscribe(user);
+      // serviceX.unsubscribe(user);
     };
   }, []);
   useEffect(() => {
@@ -32,25 +45,38 @@ function MoviesList({ additionalMovies }) {
       ? additionalMovies[additionalMovies.length - 1]
       : null;
     if (newMovie !== null) {
-      setState({
-        ...state,
-        movies: [...state.movies, newMovie]
-      });
+      setState((prevState) => ({
+        ...prevState, 
+        movies: [...state.movies, newMovie],
+      }));
     }
   }, [additionalMovies]);
   useEffect(() => {
-    const newDisplayTitle =
-      language === "en/us" ? "Star War movies" : "Peliculas de Star Wars";
-    setDisplayTitle(newDisplayTitle);
+    const newTitle = language === "en/us" 
+      ? "Star War movies" 
+      : "Peliculas de Star Wars";
+    setState((prevState) => ({
+      ...prevState, 
+      displayTitle: newTitle,
+    }));
   }, [language]);
-  const textStyle = {
-    color: theme.foreground
+
+  const handleExpandClick = (id) => {
+    setState((prevState) => ({
+      ...prevState,
+      expanded: prevState.expanded.map((status, idx) => {
+        return id === idx 
+          ? !status
+          : status;
+      }),
+    }));
   };
+
   return (
     <>
-      <h4>{displayTitle}</h4>
+      <h4>{state.displayTitle}</h4>
       <Grid container spacing={3}>
-        {state.movies.map((movie) => {
+        {state.movies.map((movie, idx) => {
           return (
             <Grid item xs={4} key={movie.episode_id}>
               <Card style={{ backgroundColor: theme.background }}>
@@ -58,6 +84,22 @@ function MoviesList({ additionalMovies }) {
                 <CardContent>
                   <h4 style={textStyle}>{movie.director}</h4>
                 </CardContent>
+                <CardActions>
+                  <Button 
+                    variant="outlined"
+                    size="large"
+                    color="primary"
+                    id={idx}
+                    onClick={() => handleExpandClick(idx)}
+                  >
+                    See Details 
+                  </Button>
+                </CardActions>
+                <Collapse in={state.expanded[idx]} timeout="auto" unmountOnExit>
+                  <CardContent>
+                    Some movie details
+                  </CardContent>
+                </Collapse>
               </Card>
             </Grid>
           );
@@ -70,10 +112,5 @@ function MoviesList({ additionalMovies }) {
 MoviesList.propTypes = {
   additionalMovies: PropTypes.array
 };
-
-// TODO fix prop type
-// MoviesList.propTypes = {
-//   additionalMovies: []
-// };
 
 export default MoviesList;

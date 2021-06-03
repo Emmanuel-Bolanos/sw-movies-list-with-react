@@ -1,24 +1,86 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { List, ListItem, ListItemText } from '@material-ui/core';
+import { Card, CardHeader, CardContent, CardActions } from "@material-ui/core";
+import Grid from "@material-ui/core/Grid";
 import Collapse from '@material-ui/core/Collapse';
 import { makeStyles } from '@material-ui/core/styles';
 import { ExpandMore, ExpandLess  } from '@material-ui/icons';
-// import axios from "axios";
+import axios from "axios";
 
 const useStyles = makeStyles({
   details: {
     width: '100%',
+    color: 'white',
   },
+  card: {
+    backgroundColor: 'rgb(156, 154, 43)',
+  }
 });
 
 function MovieDetails({ movie }) {
   const classes = useStyles();
 
-  const [open, setOpen] = useState(false);
+  const [state, setState] = useState({
+    open: false,
+    characterInfo: [],
+  });
 
   const handleClick = () => {
-    setOpen(!open);
+    setState((prevState) => ({
+      ...prevState,
+      open: !prevState.open,
+    }));
+    state.open === false 
+    ? movie.characters.map((character) => {
+      axios.get(character)
+        .then(({data}) => {
+          setState((prevState) => ({
+              ...prevState, 
+              characterInfo: [...prevState.characterInfo, {
+                name: data.name,
+                height: data.height,
+                mass: data.mass,
+              }],
+            }));
+        });
+    })
+    : setState((prevState) => ({
+      ...prevState, 
+      characterInfo: [],
+    }));
+  };
+
+  const ListOfCharacters = () => {
+    return (
+      <>
+        <ListItem button onClick={handleClick}>
+          <ListItemText
+            primary = 'Characters'
+          />
+          {state.open ? <ExpandLess /> : <ExpandMore />}
+        </ListItem>
+        <Collapse in={state.open} timeout="auto" unmountOnExit>
+        <Grid container spacing={3}>
+            {
+              state.characterInfo.map((character, idx) => {
+                return (
+                  <Grid item xs={6} key={idx}>
+                    <Card className={ classes.card }>
+                      <CardHeader title={character.name} />
+                      <CardContent>
+                        <p> {`Height: ${character.height} cm`} </p>
+                        <p> {`Mass: ${character.mass} kg`} </p>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                )
+              })
+            }
+          </Grid>
+        </Collapse>
+      </>
+    )
   };
 
   const Item = ({ category, value }) => {
@@ -39,32 +101,11 @@ function MovieDetails({ movie }) {
         <Item category="Director" value={movie.director} />
         <Item category="Producer" value={movie.producer} />
         <Item category="Opening crawl" value={movie.opening_crawl} />
-        <ListItem button onClick={handleClick}>
-
-          {/* <ListItemIcon>
-            <InboxIcon />
-          </ListItemIcon> */}
-          <ListItemText
-            primary = 'Characters'
-          />
-          {open ? <ExpandLess /> : <ExpandMore />}
-          
-        </ListItem>
-        <Collapse in={open} timeout="auto" unmountOnExit>
-          <List component="div">
-          {
-            movie.characters.map((character, idx) => {
-              return (
-                <ListItem key={idx}>
-                  <ListItemText
-                    primary = {character}
-                  />
-                </ListItem>
-              )
-            })
-          }
-          </List>
-        </Collapse>
+        {
+          movie.characters
+            ? <ListOfCharacters />
+            : <Item category="Characters"/>
+        }
       </List>
     </div>
   );

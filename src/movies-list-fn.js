@@ -41,8 +41,6 @@ function MoviesList({ additionalMovies }) {
     }));
     axios.get("https://swapi.dev/api/films/")
       .then(({ data: { results } }) => {
-        // TODO log off
-        console.log(results[0]);
         setState((prevState) => ({
           ...prevState, 
           expanded: new Array(results.length).fill(false),

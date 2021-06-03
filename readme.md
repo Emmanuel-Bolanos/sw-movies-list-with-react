@@ -18,8 +18,3 @@ Create UI components using React Hooks to add the See Details Movie feature
 Feel free to stylize your App and add/improve the functionality.
 
 All the components in this project should be functional components
-
-# Extra
-
-- [X] Added movies key issue. Fixed with nanoid for id generation.
-- 

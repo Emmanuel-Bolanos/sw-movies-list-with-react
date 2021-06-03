@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { List, ListItem, ListItemText } from '@material-ui/core';
-import { Card, CardHeader, CardContent, CardActions } from "@material-ui/core";
+import { Card, CardHeader, CardContent } from "@material-ui/core";
 import Grid from "@material-ui/core/Grid";
 import Collapse from '@material-ui/core/Collapse';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import { makeStyles } from '@material-ui/core/styles';
 import { ExpandMore, ExpandLess  } from '@material-ui/icons';
 import axios from "axios";
+import MoviesList from "./movies-list-fn";
 
 const useStyles = makeStyles({
   details: {
@@ -24,6 +26,7 @@ function MovieDetails({ movie }) {
   const [state, setState] = useState({
     open: false,
     characterInfo: [],
+    loading: false,
   });
 
   const handleClick = () => {
@@ -31,12 +34,16 @@ function MovieDetails({ movie }) {
       ...prevState,
       open: !prevState.open,
     }));
-    state.open === false 
-    ? movie.characters.map((character) => {
-      axios.get(character)
+  };
+
+  const getCharacters = () => {
+    movie.characters.map((character, idx) => {
+      const { host, pathname } =  new URL(character);
+      const httpsCharacter = `https://${host}${pathname}`;
+      axios.get(httpsCharacter)
         .then(({data}) => {
           setState((prevState) => ({
-              ...prevState, 
+              ...prevState,
               characterInfo: [...prevState.characterInfo, {
                 name: data.name,
                 height: data.height,
@@ -45,11 +52,20 @@ function MovieDetails({ movie }) {
             }));
         });
     })
-    : setState((prevState) => ({
-      ...prevState, 
+  };
+
+  const cleanCharacters = () => {
+    setState(({prevState}) => ({
+      ...prevState,
       characterInfo: [],
     }));
-  };
+  }
+
+  useEffect(() => {
+    state.open
+      ? getCharacters()
+      : cleanCharacters();
+  }, [state.open]);
 
   const ListOfCharacters = () => {
     return (
@@ -61,7 +77,7 @@ function MovieDetails({ movie }) {
           {state.open ? <ExpandLess /> : <ExpandMore />}
         </ListItem>
         <Collapse in={state.open} timeout="auto" unmountOnExit>
-        <Grid container spacing={3}>
+          <Grid container spacing={3}>
             {
               state.characterInfo.map((character, idx) => {
                 return (
@@ -78,6 +94,11 @@ function MovieDetails({ movie }) {
               })
             }
           </Grid>
+          {
+            (state.characterInfo.length === movie.characters.length)
+              ? ''
+              : <CircularProgress />
+          }
         </Collapse>
       </>
     )

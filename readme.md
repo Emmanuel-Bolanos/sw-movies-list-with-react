@@ -1,5 +1,6 @@
 # Available at
-- [ ] add address
+
+https://swlist.emmasandbox.com/
 
 # Goal
 
@@ -13,7 +14,6 @@ Create UI components using React Hooks to add the See Details Movie feature
 - [X] Add a Panel to the User Interface where you will show the movie details selected by clicking on the See Details button of each movie.
 - [X] In the details panel show the title, director, producer, opening_crawl and the list of characters of the movie.
 - [X] To pull the details of the movie characters perform a GET request for each character.
-- [ ] Push your project to your repo and add the link to the repo on this activity
 
 Feel free to stylize your App and add/improve the functionality.
 
